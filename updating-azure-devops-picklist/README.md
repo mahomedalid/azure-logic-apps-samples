@@ -21,11 +21,20 @@ flowchart TD
 
 # The logicapp
 
-* First deploy to Azure:
+1. Deploy a new Logic App to Azure using the following template:
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmahomedalid%2Fazure-logic-apps-samples%2Fmain%2Fupdating-azure-devops-picklist%2Fazuredeploy.json)
 
-* Then open your Logic Apps, go to `API connections`, open **every** connection, go to `Edit API connection`, Authorize **and Save**.
+2. Then open your Logic App, go to `API connections`, open **every** connection, go to `Edit API connection`, Authorize **and Save**.
+3. Open the `Logic app designer` under Developer Tools:
+  * Edit the `Get items` step, and update a `Site address` and `List name`.
+  * (Optional) Edit the step `Append to array variable` and update the value that you want to show in the picklist.
+  * Edit the `Send an HTTP request to Azure DevOps` step and update the `Organization Name`.
+  * Inside the designer open the `[@] Parameters` panel, and provide the picklist id.
+4. Save and test.
 
+# How to get the picklist id
 
-- [main.workflow.json](main.workflow.json)
+Replace `myorganization` and `myfieldname` in the following url and retrieve the `picklistId` property: [https://dev.azure.com/myorganization/_apis/wit/fields/myfieldname?api-version=6.0-preview.2&$expand=ALL](https://dev.azure.com/myorganization/_apis/wit/fields/myfieldname?api-version=6.0-preview.2&$expand=ALL)
+
+You can beautify the json result with some extension like [Seven JSON Viewer](https://microsoftedge.microsoft.com/addons/detail/seven-json-viewer/khfhokalnpdlmmfjocjgaaipenplemjo?hl=en-US).
