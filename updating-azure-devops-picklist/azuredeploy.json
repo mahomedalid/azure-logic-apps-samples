@@ -22,13 +22,6 @@
                 "description": "Location for all resources."
             }
         },
-        "azdo_org": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Azure DevOps Organization"
-            }
-        },
         "connections_sharepointonline_name": {
             "type": "string",
             "defaultValue": "sharepointonline",
@@ -45,11 +38,9 @@
         }
     },
     "variables": {
-        "picklistId": "",
         "frequency": "Hour",
         "interval": "1",
         "type": "recurrence",
-        "azure-devops-org": "[parameters('azdo_org')]",
         "workflowSchema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#"
     },
     "resources": [
@@ -61,7 +52,7 @@
             "properties": {
                 "api": {
                     "displayName": "SharePoint",
-                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), parameters('connections_sharepointonline_name'))]",
+                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), 'sharepointonline')]",
                     "type": "Microsoft.Web/locations/managedApis"
                 },
                 "displayName": "[parameters('connections_sharepointonline_name')]"
@@ -74,7 +65,7 @@
             "name": "[parameters('connections_azdo_name')]",
             "properties": {
                 "api": {
-                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), parameters('connections_azdo_name'))]"
+                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), 'visualstudioteamservices')]"
                 },
                 "displayName": "[parameters('connections_azdo_name')]"
             }
@@ -97,19 +88,14 @@
                     "contentVersion": "1.0.0.0",
                     "parameters": {
                         "$connections": {
-                            "value": {
-                                "sharepoint": {
-                                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), parameters('connections_sharepointonline_name'))]",
-                                    "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_sharepointonline_name'))]"
-                                },
-                                "visualstudioteamservices": {
-                                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), parameters('connections_azdo_name'))]",
-                                    "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_azdo_name'))]"
-                                }
-                            }
+                            "defaultValue": {},
+                            "type": "Object"
+                        },
+                        "picklistId": {
+                            "defaultValue": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx",
+                            "type": "String"
                         }
                     },
-
                     "triggers": {
                         "recurrence": {
                             "type": "[variables('type')]",
@@ -195,7 +181,7 @@
                                 "method": "post",
                                 "path": "/httprequest",
                                 "queries": {
-                                    "account": "@{parameters('azure-devops-org')}"
+                                    "account": "myorg"
                                 }
                             },
                             "runAfter": {
@@ -207,6 +193,20 @@
                         }
                     },
                     "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "sharepoint": {
+                                "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), 'sharepointonline')]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_sharepointonline_name'))]"
+                            },
+                            "visualstudioteamservices": {
+                                "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), 'visualstudioteamservices')]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_azdo_name'))]"
+                            }
+                        }
+                    }
                 }
             }
         }

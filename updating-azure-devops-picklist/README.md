@@ -21,6 +21,11 @@ flowchart TD
 
 # The logicapp
 
+* First deploy to Azure:
+
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmahomedalid%2Fazure-logic-apps-samples%2Fmain%2Fupdating-azure-devops-picklist%2Fazuredeploy.json)
+
+* Then open your Logic Apps, go to `API connections`, open **every** connection, go to `Edit API connection`, Authorize **and Save**.
+
 
 - [main.workflow.json](main.workflow.json)
