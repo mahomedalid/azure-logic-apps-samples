@@ -50,8 +50,7 @@
         "frequency": "Hour",
         "interval": "1",
         "type": "recurrence",
-        "actionType": "http",
-        "method": "GET",
+        "azure-devops-org": "[parameters('azdo_org')]",
         "workflowSchema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#"
     },
     "resources": [
@@ -139,7 +138,7 @@
                             "inputs": {
                                 "host": {
                                     "connection": {
-                                        "referenceName": "[parameters('connections_sharepointonline_name')]",
+                                        "referenceName": "[parameters('connections_sharepointonline_name')]"
                                     }
                                 },
                                 "method": "get",
@@ -176,7 +175,7 @@
                                 },
                                 "host": {
                                     "connection": {
-                                        "referenceName": "[parameters('connections_azdo_name')]",
+                                        "referenceName": "[parameters('connections_azdo_name')]"
                                     }
                                 },
                                 "method": "post",
@@ -193,7 +192,6 @@
                             "type": "ApiConnection"
                         }
                     },
-                    "contentVersion": "1.0.0.0",
                     "outputs": {}
                 }
             }
