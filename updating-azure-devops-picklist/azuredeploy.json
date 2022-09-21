@@ -35,8 +35,7 @@
             "metadata": {
                 "description": "SharePoint connection name"
             }
-        }
-        ,
+        },
         "connections_azdo_name": {
             "type": "string",
             "defaultValue": "azuredevops",
@@ -56,26 +55,28 @@
     "resources": [
         {
             "type": "Microsoft.Web/connections",
-            "apiVersion": "2018-07-01-preview",
+            "apiVersion": "2016-06-01",
             "location": "[parameters('location')]",
             "name": "[parameters('connections_sharepointonline_name')]",
             "properties": {
                 "api": {
-                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), 'sharepointonline')]"
+                    "displayName": "SharePoint",
+                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), parameters('connections_sharepointonline_name'))]",
+                    "type": "Microsoft.Web/locations/managedApis"
                 },
-                "displayName": "sharepoint"
+                "displayName": "[parameters('connections_sharepointonline_name')]"
             }
         },
         {
             "type": "Microsoft.Web/connections",
-            "apiVersion": "2018-07-01-preview",
+            "apiVersion": "2016-06-01",
             "location": "[parameters('location')]",
             "name": "[parameters('connections_azdo_name')]",
             "properties": {
                 "api": {
-                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), 'visualstudioteamservices')]"
+                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), parameters('connections_azdo_name'))]"
                 },
-                "displayName": "visualstudioteamservices"
+                "displayName": "[parameters('connections_azdo_name')]"
             }
         },
         {
@@ -86,16 +87,29 @@
             "tags": {
                 "displayName": "[parameters('logicAppName')]"
             },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', parameters('connections_azdo_name'))]",
+                "[resourceId('Microsoft.Web/connections', parameters('connections_sharepointonline_name'))]"
+            ],
             "properties": {
                 "definition": {
                     "$schema": "[variables('workflowSchema')]",
                     "contentVersion": "1.0.0.0",
                     "parameters": {
-                        "testUri": {
-                            "type": "string",
-                            "defaultValue": "testUri"
+                        "$connections": {
+                            "value": {
+                                "sharepoint": {
+                                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), parameters('connections_sharepointonline_name'))]",
+                                    "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_sharepointonline_name'))]"
+                                },
+                                "visualstudioteamservices": {
+                                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), parameters('connections_azdo_name'))]",
+                                    "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_azdo_name'))]"
+                                }
+                            }
                         }
                     },
+
                     "triggers": {
                         "recurrence": {
                             "type": "[variables('type')]",
@@ -138,7 +152,7 @@
                             "inputs": {
                                 "host": {
                                     "connection": {
-                                        "referenceName": "[parameters('connections_sharepointonline_name')]"
+                                        "name": "@parameters('$connections')['sharepoint']['connectionId']"
                                     }
                                 },
                                 "method": "get",
@@ -175,7 +189,7 @@
                                 },
                                 "host": {
                                     "connection": {
-                                        "referenceName": "[parameters('connections_azdo_name')]"
+                                        "name": "@parameters('$connections')['visualstudioteamservices']['connectionId']"
                                     }
                                 },
                                 "method": "post",
