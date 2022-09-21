@@ -2,170 +2,201 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "metadata": {
-      "_generator": {
-        "name": "bicep",
-        "version": "0.9.1.41621",
-        "templateHash": "8184344027657153527"
-      }
+        "_generator": {
+            "name": "bicep",
+            "version": "0.9.1.41621",
+            "templateHash": "8184344027657153527"
+        }
     },
     "parameters": {
-      "logicAppName": {
-        "type": "string",
-        "metadata": {
-          "description": "UpdateAzDoPickList"
+        "logicAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "UpdateAzDoPickList"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "azdo_org": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure DevOps Organization"
+            }
+        },
+        "connections_sharepointonline_name": {
+            "type": "string",
+            "defaultValue": "sharepointonline",
+            "metadata": {
+                "description": "SharePoint connection name"
+            }
         }
-      },
-      "location": {
-        "type": "string",
-        "defaultValue": "[resourceGroup().location]",
-        "metadata": {
-          "description": "Location for all resources."
+        ,
+        "connections_azdo_name": {
+            "type": "string",
+            "defaultValue": "azuredevops",
+            "metadata": {
+                "description": "Azure DevOps connection name"
+            }
         }
-      },
-      "azdo_org": {
-        "type": "string",
-        "defaultValue": "",
-        "metadata": {
-          "description": "Azure DevOps Organization"
-        }
-      },
-      "connections_sharepointonline_name": {
-        "type": "string",
-        "defaultValue": "",
-        "metadata": {
-          "description": "SharePoint connection name"
-        }
-      }
     },
     "variables": {
-      "picklistId": "",
-      "frequency": "Hour",
-      "interval": "1",
-      "type": "recurrence",
-      "actionType": "http",
-      "method": "GET",
-      "workflowSchema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#"
+        "picklistId": "",
+        "frequency": "Hour",
+        "interval": "1",
+        "type": "recurrence",
+        "actionType": "http",
+        "method": "GET",
+        "workflowSchema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#"
     },
     "resources": [
-     {
-        "type": "Microsoft.Logic/workflows",
-        "apiVersion": "2019-05-01",
-        "name": "[parameters('logicAppName')]",
-        "location": "[parameters('location')]",
-        "tags": {
-          "displayName": "[parameters('logicAppName')]"
-        },
-        "properties": {
-          "definition": {
-            "$schema": "[variables('workflowSchema')]",
-            "contentVersion": "1.0.0.0",
-            "parameters": {
-              "testUri": {
-                "type": "string",
-                "defaultValue": "testUri"
-              }
-            },
-            "triggers": {
-              "recurrence": {
-                "type": "[variables('type')]",
-                "recurrence": {
-                  "frequency": "[variables('frequency')]",
-                  "interval": "[variables('interval')]"
-                }
-              }
-            },
-            
-            "actions": {
-                "Compose": {
-                    "inputs": "@intersection(variables('picklistItems'),variables('picklistItems'))",
-                    "runAfter": {
-                        "For_each": [
-                            "Succeeded"
-                        ]
-                    },
-                    "type": "Compose"
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2018-07-01-preview",
+            "location": "[parameters('location')]",
+            "name": "[parameters('connections_sharepointonline_name')]",
+            "properties": {
+                "api": {
+                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), 'sharepointonline')]"
                 },
-                "For_each": {
+                "displayName": "sharepoint"
+            }
+        },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2018-07-01-preview",
+            "location": "[parameters('location')]",
+            "name": "[parameters('connections_azdo_name')]",
+            "properties": {
+                "api": {
+                    "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', parameters('location'), 'visualstudioteamservices')]"
+                },
+                "displayName": "visualstudioteamservices"
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2019-05-01",
+            "name": "[parameters('logicAppName')]",
+            "location": "[parameters('location')]",
+            "tags": {
+                "displayName": "[parameters('logicAppName')]"
+            },
+            "properties": {
+                "definition": {
+                    "$schema": "[variables('workflowSchema')]",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "testUri": {
+                            "type": "string",
+                            "defaultValue": "testUri"
+                        }
+                    },
+                    "triggers": {
+                        "recurrence": {
+                            "type": "[variables('type')]",
+                            "recurrence": {
+                                "frequency": "[variables('frequency')]",
+                                "interval": "[variables('interval')]"
+                            }
+                        }
+                    },
                     "actions": {
-                        "Append_to_array_variable": {
+                        "Compose": {
+                            "inputs": "@intersection(variables('picklistItems'),variables('picklistItems'))",
+                            "runAfter": {
+                                "For_each": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Compose"
+                        },
+                        "For_each": {
+                            "actions": {
+                                "Append_to_array_variable": {
+                                    "inputs": {
+                                        "name": "picklistItems",
+                                        "value": "@{items('For_each')?['field_0']} - @{items('For_each')?['field_2']}"
+                                    },
+                                    "runAfter": {},
+                                    "type": "AppendToArrayVariable"
+                                }
+                            },
+                            "foreach": "@body('Get_items')?['value']",
+                            "runAfter": {
+                                "Initialize_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach"
+                        },
+                        "Get_items": {
                             "inputs": {
-                                "name": "picklistItems",
-                                "value": "@{items('For_each')?['field_0']} - @{items('For_each')?['field_2']}"
+                                "host": {
+                                    "connection": {
+                                        "referenceName": "[parameters('connections_sharepointonline_name')]",
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://mysharepointsite'))}/tables/@{encodeURIComponent(encodeURIComponent('mytableguid'))}/items"
                             },
                             "runAfter": {},
-                            "type": "AppendToArrayVariable"
-                        }
-                    },
-                    "foreach": "@body('Get_items')?['value']",
-                    "runAfter": {
-                        "Initialize_variable": [
-                            "Succeeded"
-                        ]
-                    },
-                    "type": "Foreach"
-                },
-                "Get_items": {
-                    "inputs": {
-                        "host": {
-                            "connection": {
-                                "referenceName": "sharepointonline"
-                            }
+                            "type": "ApiConnection"
                         },
-                        "method": "get",
-                        "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://mysharepointsite'))}/tables/@{encodeURIComponent(encodeURIComponent('mytableguid'))}/items"
-                    },
-                    "runAfter": {},
-                    "type": "ApiConnection"
-                },
-                "Initialize_variable": {
-                    "inputs": {
-                        "variables": [
-                            {
-                                "name": "picklistItems",
-                                "type": "array"
-                            }
-                        ]
-                    },
-                    "runAfter": {
-                        "Get_items": [
-                            "Succeeded"
-                        ]
-                    },
-                    "type": "InitializeVariable"
-                },
-                "Send_an_HTTP_request_to_Azure_DevOps": {
-                    "inputs": {
-                        "body": {
-                            "Body": "{\n  \"id\": \"@{parameters('picklistId')}\",\n  \"items\": @{intersection(variables('picklistItems'),variables('picklistItems'))}\n \n}\n",
-                            "Headers": {
-                                "Content-Type": "application/json"
+                        "Initialize_variable": {
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "picklistItems",
+                                        "type": "array"
+                                    }
+                                ]
                             },
-                            "Method": "PUT",
-                            "Uri": "/_apis/work/processes/lists/@{parameters('picklistId')}?api-version=6.0-preview.1"
+                            "runAfter": {
+                                "Get_items": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable"
                         },
-                        "host": {
-                            "connection": {
-                                "referenceName": "visualstudioteamservices"
-                            }
-                        },
-                        "method": "post",
-                        "path": "/httprequest",
-                        "queries": {
-                            "account": "@{parameters('azure-devops-org')}"
+                        "Send_an_HTTP_request_to_Azure_DevOps": {
+                            "inputs": {
+                                "body": {
+                                    "Body": "{\n  \"id\": \"@{parameters('picklistId')}\",\n  \"items\": @{intersection(variables('picklistItems'),variables('picklistItems'))}\n \n}\n",
+                                    "Headers": {
+                                        "Content-Type": "application/json"
+                                    },
+                                    "Method": "PUT",
+                                    "Uri": "/_apis/work/processes/lists/@{parameters('picklistId')}?api-version=6.0-preview.1"
+                                },
+                                "host": {
+                                    "connection": {
+                                        "referenceName": "[parameters('connections_azdo_name')]",
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/httprequest",
+                                "queries": {
+                                    "account": "@{parameters('azure-devops-org')}"
+                                }
+                            },
+                            "runAfter": {
+                                "Compose": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection"
                         }
                     },
-                    "runAfter": {
-                        "Compose": [
-                            "Succeeded"
-                        ]
-                    },
-                    "type": "ApiConnection"
+                    "contentVersion": "1.0.0.0",
+                    "outputs": {}
                 }
-            },
-            "contentVersion": "1.0.0.0",
-            "outputs": {}
-          }
+            }
         }
-      }
     ]
-  }
+}
