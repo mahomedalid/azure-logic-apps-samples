@@ -24,5 +24,3 @@ flowchart TD
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmahomedalid%2Fazure-logic-apps-samples%2Fmain%2Fupdating-azure-devops-picklist%2Fazuredeploy.json)
 
 - [main.workflow.json](main.workflow.json)
-- 
-
